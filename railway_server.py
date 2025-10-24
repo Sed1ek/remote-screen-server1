@@ -361,19 +361,21 @@ def get_session_status(token):
 
 @app.route('/api/stop_session', methods=['POST'])
 def stop_session():
-    """Остановка сессии (существующий endpoint)"""
+    """Остановка сессии"""
     data = request.json
     
-    if not data or 'token' not in data:
-        return jsonify({'error': 'Token required'}), 400
+    if not data:
+        return jsonify({'error': 'Request body required'}), 400
     
-    token = data['token']
-    session = device_registry.get_session(token)
+    session_id = data.get('session_id')
+    if not session_id:
+        return jsonify({'error': 'session_id is required'}), 400
     
+    session = device_registry.get_session(session_id)
     if not session:
         return jsonify({'error': 'Session not found'}), 404
     
-    device_registry.update_session_status(token, 'ended')
+    device_registry.update_session_status(session_id, 'ended')
     
     return jsonify({
         'status': 'success',
@@ -390,6 +392,17 @@ def health_check():
         'devices_count': len(device_registry.devices),
         'sessions_count': len(device_registry.sessions),
         'redis_connected': redis_client is not None
+    })
+    
+    @app.route('/api/health', methods=['GET'])
+def api_health_check():
+    """API Health check endpoint"""
+    return jsonify({
+        'status': 'ok',
+        'message': 'Server is running',
+        'timestamp': datetime.now().isoformat(),
+        'active_sessions': len([s for s in device_registry.sessions.values() if s['status'] == 'active']),
+        'total_devices': len(device_registry.devices)
     })
 
 if __name__ == '__main__':
