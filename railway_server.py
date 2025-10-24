@@ -393,7 +393,7 @@ def health_check():
         'sessions_count': len(device_registry.sessions),
         'redis_connected': redis_client is not None
     })
-    
+
     @app.route('/api/health', methods=['GET'])
 def api_health_check():
     """API Health check endpoint"""
