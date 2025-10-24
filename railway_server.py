@@ -3,6 +3,7 @@ import json
 import logging
 import uuid
 from datetime import datetime
+import os  # Добавляем этот импорт!
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
