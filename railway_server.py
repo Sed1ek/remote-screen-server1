@@ -58,10 +58,12 @@ def start_session():
 def stop_session():
     try:
         data = request.get_json()
-        session_id = data.get('session_id')
+        
+        # Принимаем как session_id, так и token
+        session_id = data.get('session_id') or data.get('token')
         
         if not session_id:
-            return jsonify({'error': 'session_id is required'}), 400
+            return jsonify({'error': 'session_id or token is required'}), 400
         
         if session_id in sessions:
             sessions[session_id]['status'] = 'stopped'
@@ -72,6 +74,27 @@ def stop_session():
             
     except Exception as e:
         logger.error(f"Error stopping session: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/verify_token', methods=['POST'])
+def verify_token():
+    try:
+        data = request.get_json()
+        token = data.get('token') or data.get('session_id')
+        
+        if not token:
+            return jsonify({'error': 'token is required'}), 400
+        
+        if token in sessions:
+            return jsonify({
+                'valid': True,
+                'session': sessions[token]
+            })
+        else:
+            return jsonify({'valid': False, 'error': 'Token not found'}), 404
+            
+    except Exception as e:
+        logger.error(f"Error verifying token: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/session_status', methods=['GET'])
